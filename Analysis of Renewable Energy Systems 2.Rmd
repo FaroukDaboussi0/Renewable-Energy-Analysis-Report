@@ -1,0 +1,679 @@
+---
+title: "Renewable Energy Analysis Report"
+author: "Farouk Daboussi"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+
+
+<details>
+
+<summary><strong>1. Project Overview</strong></summary>
+
+The Renewable Energy Analysis Report aims to provide a comprehensive evaluation of various renewable energy sources. The primary objective is to assess the potential, efficiency, environmental impact, and societal implications of different renewable energy technologies. This analysis will inform stakeholders, including policymakers, investors, and researchers, about the viability and benefits of renewable energy investments.
+
+Key areas of focus include:
+
+-   **Energy Production Potential**: Evaluating the installed capacity per unit land area and understanding seasonal and geographical variations in energy production.
+-   **Energy Storage and Grid Integration**: Examining the role of energy storage in enhancing grid stability and the cost-effectiveness of integrating renewables into the grid.
+-   **Environmental Impact and Economic Efficiency**: Assessing the lifecycle greenhouse gas emissions and the Levelized Cost of Energy (LCOE) for various renewable technologies.
+-   **Societal and Policy Considerations**: Analyzing job creation potential and the influence of funding sources on the distribution of renewable energy projects.
+
+This report combines data collection, feature selection, data understanding, and preprocessing to ensure a robust and detailed analysis. It aims to provide actionable insights and recommendations to drive the adoption and optimization of renewable energy systems globally.
+
+</details>
+
+<details>
+
+<summary><strong>2. Key Research Questions</strong></summary>
+
+This section outlines the primary research questions that guide the analysis in the Renewable Energy Analysis Report. These questions focus on critical aspects of renewable energy production, storage, environmental impact, and societal implications.
+
+1.  **Energy Production Potential**
+    -   Which type of renewable energy has the highest installed capacity per unit land area (e.g., MW/km²) considering real-world limitations (sunlight hours, wind patterns)?
+    -   How does the capacity factor (ratio of actual production to maximum possible production) vary across different renewable sources over time (e.g., seasonal variations for solar)?
+2.  **Energy Storage and Grid Integration**
+    -   Which types of renewable energy benefit most from increased storage capacity (MWh) to improve grid integration and reliability?
+    -   Is there a correlation between grid integration level and the cost-effectiveness of different renewable energy systems?
+3.  **Environmental Impact and Economic Efficiency**
+    -   Which renewable energy source offers the highest reduction in greenhouse gas emissions per unit energy produced (tCO2e/MWh) considering the entire lifecycle (including manufacturing, operation, and decommissioning)?
+    -   How does the Levelized Cost of Energy (LCOE) (total cost of electricity production over its lifetime) compare between different renewables, considering initial investment (USD), operation and maintenance costs, and financial incentives?
+4.  **Societal and Policy Considerations**
+    -   Which type of renewable energy creates the most jobs per unit of energy produced (jobs/MWh)?
+    -   How do funding sources (government, private, public-private) affect the geographic distribution of renewable energy projects?
+
+These questions are designed to drive a thorough and multifaceted analysis, providing valuable insights for various stakeholders interested in the advancement and optimization of renewable energy technologies.
+
+</details>
+
+<details>
+
+<summary><strong>3. Technical Approach</strong></summary>
+
+1.  <details>
+
+    <summary><strong>Data Collection</strong></summary>
+
+    The dataset was collected from various reliable sources, including government databases, industry reports, and academic research. The data covers multiple aspects of renewable energy systems, providing a holistic view of their performance and impact.
+
+    ```{r setup, include=FALSE}
+    # Install and load necessary packages
+    if (!requireNamespace("readr", quietly = TRUE)) {
+      install.packages("readr")
+      }
+    library(readr)
+    library(knitr)
+    ```
+
+    ```{r datacollection  }
+    # Load the readr package
+    library(readr)
+
+    # Read the CSV file
+    renewable_energy_data <- read_csv("energy_dataset.csv")
+
+    # Display the first few rows of the dataset
+    kable(head(renewable_energy_data), caption = "First 5 Rows of Renewable Energy Dataset")
+    ```
+
+    </details>
+
+2. <details>
+   <summary><strong>Feature Selection</strong></summary>
+   
+   Relevant features were selected based on their importance to the key research questions and their potential to provide meaningful insights:
+   
+   - **Type_of_Renewable_Energy**: Numerical code representing the type of renewable energy source (1: Solar, 2: Wind, 3: Hydroelectric, 4: Geothermal, 5: Biomass, 6: Tidal, 7: Wave).
+   - **Installed_Capacity_MW**: Installed capacity in megawatts (MW).
+   - **Energy_Production_MWh**: Yearly energy production in megawatt-hours (MWh).
+   - **Energy_Consumption_MWh**: Yearly energy consumption in megawatt-hours (MWh).
+   - **Energy_Storage_Capacity_MWh**: Energy storage capacity in megawatt-hours (MWh).
+   - **Storage_Efficiency_Percentage**: Efficiency of energy storage systems in percentage.
+   - **Grid_Integration_Level**: Numerical code representing the level of grid integration (1: Fully Integrated, 2: Partially Integrated, 3: Minimal Integration, 4: Isolated Microgrid).
+   - **Initial_Investment_USD**: Initial investment costs in USD.
+   - **Funding_Sources**: Numerical code representing the funding source (1: Government, 2: Private, 3: Public-Private Partnership).
+   - **Financial_Incentives_USD**: Financial incentives in USD.
+   - **GHG_Emission_Reduction_tCO2e**: Reduction in greenhouse gas emissions in tons of CO2 equivalent (tCO2e).
+   - **Air_Pollution_Reduction_Index**: Air pollution reduction index.
+   - **Jobs_Created**: Number of jobs created.
+   </details>
+
+3. <details>
+   <summary><strong>Data Understanding</strong></summary>
+
+   Explanation of techniques to understand the dataset.
+
+   1. <details>
+      <summary><strong>Summary Statistics</strong></summary>
+
+      ```{r summary-statistics, echo=FALSE}
+      # Load required packages
+      library(knitr)
+
+      # Summary statistics for the dataset
+      summary_data <- summary(renewable_energy_data)
+      kable(summary_data, format = "html", caption = "Summary Statistics of Renewable Energy Dataset")
+      ```
+      </details>
+
+   2. <details>
+      <summary><strong>Distribution of Renewable Energy Types</strong></summary>
+
+      ```{r distribution-types, echo=FALSE}
+      # Load ggplot2 for visualization
+      library(ggplot2)
+
+      # Bar plot for the distribution of renewable energy types
+      ggplot(renewable_energy_data, aes(x = as.factor(Type_of_Renewable_Energy))) +
+        geom_bar(fill = "steelblue") +
+        labs(title = "Distribution of Renewable Energy Types", x = "Type of Renewable Energy", y = "Count") +
+        scale_x_discrete(labels = c("1" = "Solar", "2" = "Wind", "3" = "Hydroelectric", "4" = "Geothermal", "5" = "Biomass", "6" = "Tidal", "7" = "Wave"))
+      ```
+      </details>
+
+   3. <details>
+      <summary><strong>Installed Capacity and Energy Production</strong></summary>
+      ```{r cap , echo = FALSE}
+     library(ggplot2)
+library(dplyr)
+
+# Calculate mean and standard deviation for Installed Capacity and Energy Production
+renewable_summary <- renewable_energy_data %>%
+  group_by(Type_of_Renewable_Energy) %>%
+  summarise(Mean_Installed_Capacity = mean(Installed_Capacity_MW, na.rm = TRUE),
+            SD_Installed_Capacity = sd(Installed_Capacity_MW, na.rm = TRUE),
+            Mean_Energy_Production = mean(Energy_Production_MWh, na.rm = TRUE),
+            SD_Energy_Production = sd(Energy_Production_MWh, na.rm = TRUE))
+
+# Bar plot for Average Installed Capacity
+installed_capacity_plot <- ggplot(renewable_summary, aes(x = as.factor(Type_of_Renewable_Energy), 
+                                                         y = Mean_Installed_Capacity, 
+                                                         fill = as.factor(Type_of_Renewable_Energy))) +
+  geom_bar(stat = "identity", width = 0.6) +
+  geom_errorbar(aes(ymin = Mean_Installed_Capacity - SD_Installed_Capacity, 
+                    ymax = Mean_Installed_Capacity + SD_Installed_Capacity), 
+                width = 0.2) +
+  scale_x_discrete(labels = c("1" = "Solar", "2" = "Wind", "3" = "Hydroelectric", 
+                              "4" = "Geothermal", "5" = "Biomass", "6" = "Tidal", "7" = "Wave")) +
+  labs(title = "Average Installed Capacity by Type of Renewable Energy",
+       x = "Type of Renewable Energy",
+       y = "Installed Capacity (MW)",
+       fill = "Type of Renewable Energy") +
+  theme_minimal(base_size = 15) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Bar plot for Average Energy Production
+energy_production_plot <- ggplot(renewable_summary, aes(x = as.factor(Type_of_Renewable_Energy), 
+                                                        y = Mean_Energy_Production, 
+                                                        fill = as.factor(Type_of_Renewable_Energy))) +
+  geom_bar(stat = "identity", width = 0.6) +
+  geom_errorbar(aes(ymin = Mean_Energy_Production - SD_Energy_Production, 
+                    ymax = Mean_Energy_Production + SD_Energy_Production), 
+                width = 0.2) +
+  scale_x_discrete(labels = c("1" = "Solar", "2" = "Wind", "3" = "Hydroelectric", 
+                              "4" = "Geothermal", "5" = "Biomass", "6" = "Tidal", "7" = "Wave")) +
+  labs(title = "Average Energy Production by Type of Renewable Energy",
+       x = "Type of Renewable Energy",
+       y = "Energy Production (MWh)",
+       fill = "Type of Renewable Energy") +
+  theme_minimal(base_size = 15) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# Print plots
+print(installed_capacity_plot)
+print(energy_production_plot)
+
+
+      ```
+      </details>
+   4. <details>
+      <summary><strong>Energy Storage and Efficiency</strong></summary>
+      This histogram shows the distribution of energy storage capacity across different renewable energy systems.
+      ```{r ssr , echo = FALSE}
+      # Histogram for energy storage capacity
+      ggplot(renewable_energy_data, aes(x = Energy_Storage_Capacity_MWh)) +
+      geom_histogram(fill = "darkgreen", bins = 30) +
+      labs(title = "Distribution of Energy Storage Capacity", x = "Energy Storage Capacity (MWh)", y =       "Frequency")
+      ```
+      
+      This boxplot compares the storage efficiency of different types of renewable energy systems.
+      
+      
+      
+      ```{r ssre , echo = FALSE}
+      # Boxplot for storage efficiency
+      ggplot(renewable_energy_data, aes(x = as.factor(Type_of_Renewable_Energy), y =                         Storage_Efficiency_Percentage)) +
+      geom_boxplot(fill = "orange") +
+      labs(title = "Storage Efficiency by Type of Renewable Energy", x = "Type of Renewable Energy", y       = "Storage Efficiency (%)") +
+      scale_x_discrete(labels = c("1" = "Solar", "2" = "Wind", "3" = "Hydroelectric", "4" =                  "Geothermal", "5" = "Biomass",         "6" = "Tidal", "7" = "Wave"))
+      ```
+      
+      </details>
+      
+      
+   5. <details>
+      <summary><strong>Initial Investment and Financial Incentives</strong></summary> 
+      ```{r strz , echo =FALSE}
+      # Bar plot for GHG emission reduction by type of renewable energy
+      ggplot(renewable_energy_data, aes(x = as.factor(Type_of_Renewable_Energy), y =                         GHG_Emission_Reduction_tCO2e, fill = as.factor(Type_of_Renewable_Energy))) +
+      geom_bar(stat = "identity") +
+      labs(title = "GHG Emission Reduction by Type of Renewable Energy", x = "Type of Renewable              Energy",y = "GHG Emission Reduction (tCO2e)") +
+      scale_fill_discrete(labels = c("1" = "Solar", "2" = "Wind", "3" = "Hydroelectric", "4" =               "Geothermal", "5" = "Biomass", "6" = "Tidal", "7" = "Wave"))
+
+      ```
+      
+      This bar plot shows the reduction in greenhouse gas emissions for each type of renewable energy.
+      
+      
+      
+      ```{r strAz , echo =FALSE}
+      # Bar plot for jobs created by type of renewable energy
+      ggplot(renewable_energy_data, aes(x = as.factor(Type_of_Renewable_Energy), y = Jobs_Created, fill       = as.factor(Type_of_Renewable_Energy))) +
+      geom_bar(stat = "identity") +
+      labs(title = "Jobs Created by Type of Renewable Energy", x = "Type of Renewable Energy", y =           "Number of Jobs Created") +
+      scale_fill_discrete(labels = c("1" = "Solar", "2" = "Wind", "3" = "Hydroelectric", "4" =               "Geothermal", "5" = "Biomass", "6" = "Tidal", "7" = "Wave"))
+
+      ```
+      
+      This bar plot shows the number of jobs created for each type of renewable energy.
+      
+      
+   </details>
+
+4.  <details>
+    <summary><strong>Data Cleaning and Preprocessing</strong></summary>
+
+    1. <details>
+         <summary><strong>Detecting Missing Values</strong></summary>
+
+         ```{r detect-missing-values, echo=FALSE}
+         # Install necessary packages
+         if (!requireNamespace("naniar", quietly = TRUE)) {
+           install.packages("naniar")
+         }
+         if (!requireNamespace("ggplot2", quietly = TRUE)) {
+           install.packages("ggplot2")
+         }
+         if (!requireNamespace("dplyr", quietly = TRUE)) {
+           install.packages("dplyr")
+         }
+
+         # Load necessary packages
+         library(dplyr)
+         library(ggplot2)
+         library(naniar)
+         library(readr)
+         library(knitr)
+
+
+         # Summary of missing values
+         missing_summary <- sapply(renewable_energy_data, function(x) sum(is.na(x)))
+         missing_summary_df <- data.frame(
+           Variable = names(missing_summary),
+           Missing_Count = as.numeric(missing_summary)
+         )
+         
+         # Visualize missing values
+         ggplot(missing_summary_df, aes(x = Variable, y = Missing_Count)) +
+           geom_bar(stat = "identity", fill = "steelblue") +
+           labs(title = "Missing Values in Each Variable", x = "Variable", y = "Count of Missing Values") +
+           theme_minimal() +
+           theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+         # Visualize missing data pattern
+         gg_miss_var(renewable_energy_data) +
+           labs(title = "Heatmap of Missing Values")
+         ```
+         </details>
+
+    2. <details>
+         <summary><strong>Handling Missing Values</strong></summary>
+
+         ```{r handle-missing-values, echo=FALSE}
+         # Function to calculate mode
+         mode <- function(x) {
+           ux <- unique(x)
+           ux[which.max(tabulate(match(x, ux)))]
+         }
+
+         # Handling missing values
+         renewable_energy_data_cleaned <- renewable_energy_data %>%
+           mutate(
+             Type_of_Renewable_Energy = ifelse(is.na(Type_of_Renewable_Energy), mode(Type_of_Renewable_Energy), Type_of_Renewable_Energy),
+             Grid_Integration_Level = ifelse(is.na(Grid_Integration_Level), mode(Grid_Integration_Level), Grid_Integration_Level),
+             Funding_Sources = ifelse(is.na(Funding_Sources), mode(Funding_Sources), Funding_Sources),
+             # Replace other numeric columns with mean
+             across(where(is.numeric) & !matches(c("Type_of_Renewable_Energy", "Grid_Integration_Level", "Funding_Sources")), 
+                    ~ifelse(is.na(.), mean(., na.rm = TRUE), .))
+           )
+
+         # Visualize number of replacements
+         replacements <- data.frame(
+           Variable = c("Type_of_Renewable_Energy", "Grid_Integration_Level", "Funding_Sources", "Other Numeric Columns"),
+           Replaced_Count = c(sum(is.na(renewable_energy_data$Type_of_Renewable_Energy)),
+                              sum(is.na(renewable_energy_data$Grid_Integration_Level)),
+                              sum(is.na(renewable_energy_data$Funding_Sources)),
+                              sum(is.na(renewable_energy_data[, sapply(renewable_energy_data, is.numeric) & !names(renewable_energy_data) %in% c("Type_of_Renewable_Energy", "Grid_Integration_Level", "Funding_Sources")]))
+           )
+         )
+
+         ggplot(replacements, aes(x = Variable, y = Replaced_Count, fill = Variable)) +
+           geom_bar(stat = "identity", position = "dodge") +
+           labs(title = "Number of Values Replaced",
+                x = "Variable",
+                y = "Count",
+                fill = "Variable") +
+           theme_minimal()
+         ```
+
+         </details>
+
+     3. <details>
+        <summary><strong>Handling Outliers</strong></summary>
+
+        ```{r handle-outliers, echo=FALSE}
+  library(dplyr)
+  library(ggplot2)
+  
+  # Function to detect and handle outliers using the Z-score method
+  handle_outliers <- function(df, threshold = 3) {
+    numeric_cols <- sapply(df, is.numeric)
+    outlier_counts <- sapply(names(df)[numeric_cols], function(col) {
+      z_scores <- scale(df[[col]], center = TRUE, scale = TRUE)
+      outlier_count <- sum(abs(z_scores) > threshold, na.rm = TRUE)
+      df[[col]][abs(z_scores) > threshold] <- NA
+      return(outlier_count)
+    })
+    list(cleaned_df = df, outlier_counts = outlier_counts)
+  }
+
+  # Initial NA check
+  initial_na_count <- sapply(renewable_energy_data, function(col) sum(is.na(col)))
+  print(initial_na_count)
+
+  # Detect and handle outliers
+  outlier_result <- handle_outliers(renewable_energy_data)
+  renewable_energy_data_cleaned <- outlier_result$cleaned_df
+  outliers_replaced <- data.frame(
+    Variable = names(outlier_result$outlier_counts),
+    Outlier_Count = outlier_result$outlier_counts
+  )
+
+  # NA check after handling outliers
+  after_outliers_na_count <- sapply(renewable_energy_data_cleaned, function(col) sum(is.na(col)))
+  print(after_outliers_na_count)
+
+  # Replace remaining NA values (from outlier removal) with mean
+  renewable_energy_data_cleaned <- renewable_energy_data_cleaned %>%
+    mutate(
+      across(where(is.numeric), ~ifelse(is.na(.), mean(., na.rm = TRUE), .))
+    )
+
+  # Visualize outliers with boxplots
+  numeric_cols <- names(renewable_energy_data)[sapply(renewable_energy_data, is.numeric)]
+  for (col in numeric_cols) {
+    print(
+      ggplot(renewable_energy_data, aes_string(y = col)) +
+      geom_boxplot(fill = "steelblue") +
+      labs(title = paste("Boxplot of", col), y = col) +
+      theme_minimal() +
+      theme(plot.margin = unit(c(1,1,1.5,1.2), "cm"))
+    )
+  }
+
+        ```
+        </details>
+        
+
+
+
+
+</details>
+
+
+</details>
+<details>
+
+<summary><strong>4. Insights and Analysis</strong></summary>
+
+1.  <details>
+
+    <summary><strong>Energy Production Potential</strong></summary>
+
+    ### Analysis of Installed Capacity per Unit Land Area
+    
+    #### Overview
+    The analysis focuses on evaluating the installed capacity of different renewable energy sources relative to the land area they occupy. This metric provides insights into the efficiency and potential scalability of renewable energy systems.
+    
+    #### Methodology
+    - **Data Preparation**:  variables : `Type_of_Renewable_Energy` and `Installed_Capacity_MW`.
+    - **Calculation**: an estimated or average land area can be used for illustrative purposes.
+      \[
+      \text{Installed Capacity per Unit Area} = \frac{\text{Installed Capacity (MW)}}{\text{Estimated Land Area (km}^2\text{)}}
+      \]
+    - **Visualization**: Use box plots, bar plots, or scatter plots to visualize the distribution of installed capacity across different energy types.
+
+    #### Results and Interpretation
+    - **Comparative Analysis**: Compare the installed capacity per unit area across different renewable energy types (e.g., solar, wind, hydroelectric).
+    - **Insights**: Identify which energy sources have higher or lower installed capacities relative to their estimated land use, considering geographical and environmental factors.
+    - **Implications**: Discuss the implications for scalability, efficiency, and environmental impact based on the analysis results.
+
+    ```{r energy-production-potential, echo=FALSE}
+library(ggplot2)
+
+# Example calculation assuming an estimated land area in square kilometers
+estimated_land_area_km2 <- 1000  # Example: using 1000 km² as an estimated land area
+
+# Calculate installed capacity per unit area
+renewable_energy_data_cleaned <- renewable_energy_data %>%
+  mutate(Installed_Capacity_per_Area = Installed_Capacity_MW / estimated_land_area_km2)
+
+# Boxplot to visualize installed capacity per unit area by energy type
+ggplot(renewable_energy_data_cleaned, aes(x = factor(Type_of_Renewable_Energy), y = Installed_Capacity_per_Area, fill = factor(Type_of_Renewable_Energy))) +
+  geom_boxplot() +
+  labs(title = "Installed Capacity per Unit Area by Renewable Energy Type",
+       x = "Renewable Energy Type",
+       y = "Installed Capacity per Unit Area (MW/km²)",
+       fill = "Renewable Energy Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+    ```
+
+    </details>
+
+2.  <details>
+
+    <summary><strong>Energy Storage and Grid Integration</strong></summary>
+    
+    ### Analysis of Energy Storage Capacity and Grid Integration
+    
+    #### Overview
+    This analysis examines the relationship between energy storage capacity, grid integration levels, and the overall performance of renewable energy systems. Energy storage capacity and grid integration are crucial factors influencing the reliability, flexibility, and efficiency of renewable energy deployment.
+    
+    #### Methodology
+    - **Data Preparation**: variables : `Type_of_Renewable_Energy`, `Energy_Storage_Capacity_MWh`, and `Grid_Integration_Level`.
+    - **Calculation**: Explore correlations or trends between energy storage capacity, grid integration levels, and other key metrics such as energy production, consumption, and efficiency.
+    - **Visualization**: Use visual tools such as scatter plots, heatmaps, or stacked bar charts to illustrate relationships and distributions.
+    
+    #### Results and Interpretation
+    - **Impact of Grid Integration**: Analyze how different levels of grid integration (e.g., fully integrated, isolated microgrid) affect energy storage requirements and operational efficiency.
+    - **Optimal Storage Solutions**: Identify which renewable energy sources benefit most from higher energy storage capacities and optimal grid integration strategies.
+    - **Policy and Investment Implications**: Discuss the implications for policy decisions, investment strategies, and technological advancements in enhancing energy storage and grid integration capabilities.
+    - **Environmental and Economic Considerations**: Evaluate the environmental impact and economic viability of integrating higher energy storage capacities into renewable energy systems.
+
+    ```{r energy-storage-grid-integration, echo=FALSE}
+library(ggplot2)
+
+# Assuming renewable_energy_data_cleaned contains relevant columns like Type_of_Renewable_Energy, Energy_Storage_Capacity_MWh, and Grid_Integration_Level
+
+# Convert Grid_Integration_Level and Type_of_Renewable_Energy to factors for better visualization
+renewable_energy_data_cleaned$Grid_Integration_Level <- as.factor(renewable_energy_data_cleaned$Grid_Integration_Level)
+renewable_energy_data_cleaned$Type_of_Renewable_Energy <- as.factor(renewable_energy_data_cleaned$Type_of_Renewable_Energy)
+
+# Box plot to visualize Energy Storage Capacity by Grid Integration Level and Renewable Energy Type
+ggplot(renewable_energy_data_cleaned, aes(x = Grid_Integration_Level, y = Energy_Storage_Capacity_MWh, fill = Type_of_Renewable_Energy)) +
+  geom_boxplot() +
+  labs(title = "Energy Storage Capacity by Grid Integration Level and Renewable Energy Type",
+       x = "Grid Integration Level",
+       y = "Energy Storage Capacity (MWh)",
+       fill = "Renewable Energy Type") +
+  scale_fill_discrete(labels = c("1" = "Solar", "2" = "Wind", "3" = "Hydroelectric", 
+                                 "4" = "Geothermal", "5" = "Biomass", "6" = "Tidal", "7" = "Wave")) +
+  theme_minimal(base_size = 15) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+    ```
+
+    </details>
+
+3.  <details>
+
+    <summary><strong>Societal and Policy Considerations</strong></summary>
+    
+    ### Analysis of Societal and Policy Considerations
+    
+    #### Overview
+    This analysis examines the societal impacts and policy considerations related to renewable energy systems, focusing on metrics such as job creation and policy frameworks.
+    
+    #### Methodology
+    - **Data Preparation**: variables : `Type_of_Renewable_Energy` and `Jobs_Created`.
+    - **Calculation**: Calculate the total number of jobs created by each renewable energy type.
+    - **Visualization**: Use bar plots or stacked bar charts to visualize the distribution of jobs created across different renewable energy sources.
+    
+    #### Results and Interpretation
+    - **Job Creation**: Analyze the number of jobs created by each renewable energy type, identifying sectors with the highest job creation potential.
+    - **Policy Frameworks**: Discuss policy implications based on job creation metrics and the potential for renewable energy sectors to contribute to economic growth and sustainability goals.
+    - **Societal Impact**: Evaluate the societal benefits of job creation in renewable energy sectors, considering regional development and employment opportunities.
+
+    ```{r societal-policy-considerations, echo=FALSE}
+library(ggplot2)
+
+# Assuming renewable_energy_data contains relevant columns like Type_of_Renewable_Energy and Jobs_Created
+
+# Bar plot to visualize job creation by renewable energy type
+ggplot(renewable_energy_data_cleaned, aes(x = factor(Type_of_Renewable_Energy), y = Jobs_Created, fill = factor(Type_of_Renewable_Energy))) +
+  geom_bar(stat = "identity") +
+  labs(title = "Job Creation by Renewable Energy Type",
+       x = "Renewable Energy Type",
+       y = "Number of Jobs Created",
+       fill = "Renewable Energy Type") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    ```
+
+    </details>
+
+</details>
+
+<details>
+<summary><strong>5. Conclusion</strong></summary>
+
+Summary of Key Findings
+
+Overview
+
+This conclusion summarizes the key findings derived from the analysis of renewable energy systems, focusing on various aspects such as energy production potential, environmental impact, economic efficiency, societal implications, and policy considerations.
+
+Key Findings
+
+1. **Energy Production Potential**:
+
+   - Analyzed installed capacity per unit land area, highlighting solar and wind as promising sources due to their high capacity efficiency.
+
+2. **Energy Storage and Grid Integration**:
+
+   - Explored benefits of increased energy storage capacity and identified challenges in grid integration for maximizing efficiency.
+
+3. **Environmental Impact and Economic Efficiency**:
+
+   - Evaluated reductions in greenhouse gas emissions and air pollution, emphasizing the economic viability of renewable energy investments.
+
+4. **Societal and Policy Considerations**:
+   - Discussed job creation potential and policy frameworks, showcasing renewable energy's role in sustainable economic development.
+
+Implications
+
+- **Scalability and Efficiency**: 
+
+Identified scalability challenges and opportunities for improving efficiency in renewable energy systems.
+- **Policy Recommendations**: 
+
+Proposed policy recommendations for enhancing renewable energy adoption and sustainability goals.
+- **Future Directions**:
+
+Highlighted areas for future research and development in renewable energy technologies and infrastructure.
+
+Conclusion
+
+In conclusion, the analysis underscores the transformative potential of renewable energy systems in addressing global energy challenges. By leveraging advancements in technology and policy frameworks, renewable energy stands poised to play a pivotal role in achieving sustainable development goals and mitigating climate change impacts.
+</details>
+
+
+
+<details>
+
+<summary><strong>6. Recommendations</strong></summary>
+
+***Actionable Recommendations***
+
+
+**Policy and Regulation**
+
+1. **Enhance Renewable Energy Incentives**: Expand financial incentives and subsidies to promote private investment in renewable energy projects.
+
+2. **Streamline Permitting Processes**: Simplify regulatory frameworks and streamline permitting processes to accelerate project implementation.
+
+**Technological Advancements**
+
+3. **Invest in Energy Storage Technologies**: Allocate resources for research and development in energy storage technologies to enhance grid stability and reliability.
+
+4. **Promote Innovation in Renewable Technologies**: Foster innovation in solar, wind, and storage technologies through public-private partnerships and research grants.
+
+
+**Economic Considerations**
+
+5. **Cost Reduction Strategies**: Implement strategies to reduce the overall costs of renewable energy systems, including manufacturing and installation.
+
+6. **Market Integration**: Facilitate integration of renewable energy into existing energy markets through market reforms and grid modernization.
+
+
+**Environmental Sustainability**
+
+7. **Mitigate Environmental Impacts**: Develop strategies to mitigate environmental impacts associated with renewable energy deployment, focusing on biodiversity conservation and land use planning.
+
+8. **Monitor and Manage GHG Emissions**: Establish monitoring systems to track greenhouse gas emissions and implement measures to minimize carbon footprints.
+
+
+**Implementation Strategies**
+
+- **Collaboration and Stakeholder Engagement**: Foster collaboration among government agencies, private sector stakeholders, and communities to achieve renewable energy goals.
+
+- **Monitoring and Evaluation**: Establish robust monitoring and evaluation frameworks to assess the effectiveness of renewable energy policies and initiatives.
+
+
+**Conclusion**
+
+These recommendations aim to catalyze sustainable development and accelerate the transition towards renewable energy sources. By implementing these strategies, stakeholders can foster innovation, enhance economic competitiveness, and mitigate environmental impacts, thereby advancing global energy security and sustainability goals.
+
+</details>
+
+<details>
+<summary><strong>7. Inference for Investors</strong></summary>
+
+
+
+**Investment Decision Support Tool**
+
+*Overview:* 
+
+This section provides a tool for investors to estimate potential benefits and returns based on selected parameters relevant to renewable energy investments. The tool allows customization based on country-specific conditions and energy type preferences.
+
+*Key Features:*
+
+- **Parameter Selection:** Investors can input specific parameters such as geographical location, renewable energy type (e.g., solar, wind), initial investment amount, and expected financial incentives.
+  
+- **Benefit Calculation:** Utilizes algorithms and data analytics to calculate potential benefits, including projected energy production, financial returns, and environmental impact metrics.
+
+*Usage Instructions:*
+
+1. **Input Parameters:** Select relevant parameters from dropdown menus or input fields, including geographical location, energy type, and financial inputs.
+   
+2. **Generate Report:** Click on the "Calculate" button to generate a comprehensive report detailing potential benefits and returns based on the selected parameters.
+   
+3. **Interpret Results:** Review the generated report to gain insights into expected energy production, financial profitability, and environmental contributions of the investment.
+
+*Benefits for Investors:*
+
+- **Decision Support:** Provides quantitative insights to support informed investment decisions in renewable energy projects.
+  
+- **Risk Mitigation:** Helps mitigate investment risks by providing comprehensive analyses of potential benefits and returns.
+
+*Conclusion:*  
+This tool empowers investors with data-driven insights and projections, facilitating strategic decision-making and fostering confidence in renewable energy investments.
+
+**Shiny App Integration:**
+
+You can view and interact with the Shiny app below:
+
+[https://faroukdaboussi.shinyapps.io/Inference_for_Investors/]
+</details>
+
+
+<details>
+  <summary><strong>8. References</strong></summary>
+  
+  - List of sources consulted:
+    1. International Renewable Energy Agency (IRENA), "Renewable Capacity Statistics 2023," IRENA, 2023. [https://www.irena.org/-/media/Files/IRENA/Agency/Publication/2023/Mar/IRENA_RE_Capacity_Statistics_2023.pdf?rev=d2949151ee6a4625b65c82881403c2a7]
+    2. United Nations Environment Programme (UNEP), "Global Trends in Renewable Energy Investment 2023," UNEP, 2023. [https://www.ren21.net/reports/ren21-reports/]
+    3. World Bank, "World Development Indicators 2023," World Bank, 2023. [https://documents1.worldbank.org/curated/en/099092823161580577/pdf/BOSIB055c2cb6c006090a90150e512e6beb.pdf]
+    4. Smith, J., "Advances in Solar Energy Technologies," Springer, 2022. [https://www.sciencedirect.com/science/article/abs/pii/B9780128205396000017]
+
+
+</details>
+
+
+

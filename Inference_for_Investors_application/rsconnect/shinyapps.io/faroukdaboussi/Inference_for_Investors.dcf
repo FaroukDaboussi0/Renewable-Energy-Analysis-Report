@@ -1,0 +1,12 @@
+name: Inference_for_Investors
+title: Inference_for_Investors
+username: faroukdaboussi
+account: faroukdaboussi
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12279456
+bundleId: 8829156
+url: https://faroukdaboussi.shinyapps.io/Inference_for_Investors/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
